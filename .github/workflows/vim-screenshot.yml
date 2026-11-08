@@ -1,4 +1,4 @@
-name: Capture Vim and Neovim Screenshots
+name: Capture Screenshots
 
 on:
   workflow_dispatch: # Allows manual trigger from the Actions tab
