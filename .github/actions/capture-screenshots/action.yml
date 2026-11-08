@@ -1,0 +1,14 @@
+name: Capture Vim and Neovim Screenshots
+description: Capture Vim and Neovim with VHS using installed recording dependencies.
+
+runs:
+  using: composite
+  steps:
+    - name: Run VHS Tape Scripts
+      shell: bash
+      run: |
+        mkdir -p docs
+        vhs < screenshot.tape
+        test -s docs/vim-screenshot.png
+        vhs < nvim-screenshot.tape
+        test -s docs/nvim-screenshot.png

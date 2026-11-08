@@ -1,0 +1,51 @@
+name: Capture Vim and Neovim Screenshots
+
+on:
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+  workflow_run:
+    workflows: [ "Build Screenshot Image" ]
+    types: [completed]
+    branches: [ "master", "main" ]
+  push:
+    branches: [ "master", "main" ]
+    paths:
+      - 'README.md'  # Trigger when relevant files change
+
+jobs:
+  screenshot:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/randymcmillan/gh-screenshots:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Ensure the workflow token has write permissions to commit back to the repo
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Capture screenshots
+      uses: ./.github/actions/capture-screenshots
+
+    - name: Commit and Push Screenshots
+      if: ${{ env.ACT != 'true' }}
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Check if there are any changes to commit
+        git status
+        git add docs/vim-screenshot.png docs/nvim-screenshot.png
+        
+        if git diff --staged --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "chore: auto-generate Vim and Neovim screenshots [skip ci]"
+          git push
+        fi
